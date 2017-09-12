@@ -1,0 +1,39 @@
+Dynamic Programming
+
+Items: I
+i_v = value of i for i in I
+i_w = weight of i for i in I
+n = total weight that can be held
+k = o(I)
+O(n, j) = optimal weight for first j items where j <= k
+
+For j <= k
+j_th item, we can either
+- take it
+    - O(n, j) = j_v + O(n - j_w, j - 1)
+- not take it
+    - O(n, j) = O(n, j - 1)
+O(n, j) = max(O(n, j-1), j_v + O(n - j_w, j-1))
+
+
+Branch and Bound
+- At each node, you have
+    - capacity left
+    - value
+    - estimate (should be optimistic)
+        - but ideally we don't want to be too optimistic, and would provide the least upper bound possible
+- And for bounding, we need to keep track of
+    - Best final value
+
+- Ideally the search strategy will be configurable
+    - Depth-first
+    - Best-first
+        - Pick the highest estimate at each step
+        - Could use a priority queue
+    - Least Discrepancy Search
+        - Start with taking everything
+        - Then you can not take a single item
+        - Then you can not take two items
+        - etc.
+
+B&B w/ Linear Relaxation
