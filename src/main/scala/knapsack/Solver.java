@@ -2,14 +2,17 @@ package knapsack;
 
 import knapsack.domain.Item;
 import knapsack.domain.KnapsackResult;
-import knapsack.solver.*;
+import knapsack.solver.BfsBranchAndBoundSolver;
+import knapsack.solver.DfsBranchAndBoundSolver;
+import knapsack.solver.KnapsackSolver;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -72,12 +75,10 @@ public class Solver {
                 .map(line -> line.split("\\s+"))
                 .map(parts -> Item.of(parseInt(parts[1]), parseInt(parts[0])))
                 .collect(Collectors.toList());
-        KnapsackSolver bestFirstSolver = new BfsBranchAndBoundSolver(LinearRelaxationEstimator$.MODULE$);
-        KnapsackSolver depthFirstSolver = new DfsBranchAndBoundSolver(LinearRelaxationEstimator$.MODULE$);
-        KnapsackSolver leastDiscrepancySolver = new LeastDiscrepancySolver();
+        KnapsackSolver bestFirstSolver = new BfsBranchAndBoundSolver();
+        KnapsackSolver depthFirstSolver = new DfsBranchAndBoundSolver();
         solveWithBenchmark(bestFirstSolver, capacity, items);
         solveWithBenchmark(depthFirstSolver, capacity, items);
-        solveWithBenchmark(leastDiscrepancySolver, capacity, items);
         // prepare the solution in the specified output format
     //    System.out.println(value+" 0");
     //    for(int i=0; i < items; i++){

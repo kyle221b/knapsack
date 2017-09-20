@@ -69,18 +69,17 @@ sealed trait BranchAndBoundSolver extends KnapsackSolver {
 
   def solve(maxWeight: Int, items: util.List[knapsack.domain.Item]): KnapsackResult = {
     val sortedItems = items.sorted(itemOrderingByValueToWeightRatio.reverse)
-    val estimate = calculateEstimate(0, maxWeight, sortedItems.zipWithIndex.toList)
-    val rootNode = Node(0, maxWeight, estimate, Map.empty)
-    val nodeQueue = mutable.PriorityQueue(rootNode)(nodeOrdering)
     val (lowerBoundValue, lowerBoundSolution) = pickInitialGuess(maxWeight, sortedItems.toList)
-    if (lowerBoundSolution.forAll(!_))
-      
-    val solution = lowerBoundGuess.map(solve(sortedItems, nodeQueue, _))
-      .getOrElse(Node(0, maxWeight, Estimate.empty, Array.fill(sortedItems.length)(Some(false))))
-    val itemsInSolution = sortedItems.zip(solution.currentSolutionBitmap)
-      .filter { case(_, status) => status.exists(identity) }
-      .map(_._1)
-    new KnapsackResult (solution.value, itemsInSolution.toList, true)
+    if (lowerBoundSolution.forall(!_))
+      new KnapsackResult(lowerBoundValue, List(), true)
+    else {
+      val estimate = calculateEstimate(0, maxWeight, sortedItems.zipWithIndex.toList)
+      val rootNode = Node(0, maxWeight, estimate, Map.empty)
+      val nodeQueue = mutable.PriorityQueue(rootNode)(nodeOrdering)
+      val (value, solution) = solve(sortedItems.toArray, nodeQueue, lowerBoundValue, lowerBoundSolution)
+      val itemsInSolution = sortedItems.zip(solution).filter(_._2).map(_._1)
+      new KnapsackResult(value, itemsInSolution.toList, true)
+    }
   }
 
   private def pickInitialGuess(maxWeight: Int, sortedItems: List[Item]): (Value, Solution) = {
@@ -132,7 +131,7 @@ sealed trait BranchAndBoundSolver extends KnapsackSolver {
     val criticalItem = items(criticalItemIndex)
     val leftNodeUpdatedValue = node.value + criticalItem.getValue
     val leftNodeUpdatedCapacity = node.capacity - criticalItem.getWeight
-    val leftNodeItemsLeft = items.zipWithIndex.filter { case (_, index) => currentSolutionForLeftChild.get(index).forall(!_) }
+    val leftNodeItemsLeft = items.zipWithIndex.filter { case (_, index) => currentSolutionForLeftChild.get(index).isEmpty }
     val leftNode = node.copy(
       value = leftNodeUpdatedValue,
       capacity = leftNodeUpdatedCapacity,
@@ -146,7 +145,7 @@ sealed trait BranchAndBoundSolver extends KnapsackSolver {
   }
 }
 
-object DfsBranchAndBoundSolver extends BranchAndBoundSolver {
+class DfsBranchAndBoundSolver extends BranchAndBoundSolver {
   import Domain.Node
 
   override val nodeOrdering: Ordering[Node] = new Ordering[Node] {
@@ -154,10 +153,10 @@ object DfsBranchAndBoundSolver extends BranchAndBoundSolver {
   }
 }
 
-object BfsBranchAndBoundSolver extends BranchAndBoundSolver {
+class BfsBranchAndBoundSolver extends BranchAndBoundSolver {
   import Domain.Node
 
-  override val nodeOrdering = new Ordering[Node] {
+  override val nodeOrdering: Ordering[Node] = new Ordering[Node] {
     override def compare(x: Node, y: Node): Int = (x.estimate.value - y.estimate.value).signum
   }
 }

@@ -3,3 +3,5 @@ _coursera
 handout.pdf
 *.iml
 submit.py
+.idea
+build
